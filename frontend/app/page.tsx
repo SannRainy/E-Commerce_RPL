@@ -54,7 +54,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative w-full h-[60vh] bg-[url('/bg-1.jpg')] bg-cover bg-center flex items-center justify-center text-center px-5">
         <div className="relative z-10 text-white">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Belanja Produk Elektronik Berkualitas</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">Belanja Produk Fashion Berkualitas</h2>
 
           <a href="#produk" className="px-6 py-3 mt-10 bg-green-600 text-white rounded hover:bg-green-700 transition">
             Mulai Belanja
@@ -139,8 +139,8 @@ export default function Home() {
       <footer className="mt-24 bg-green-600 text-white py-10 px-10">
         <div className="grid md:grid-cols-3 gap-8 text-sm max-w-7xl mx-auto">
           <div>
-            <h4 className="font-bold mb-2 text-lg">HayataStore</h4>
-            <p>Marketplace terpercaya untuk produk lokal UMKM.</p>
+            <h4 className="font-bold mb-2 text-lg">MDG Fashion</h4>
+            <p>Marketplace terpercaya untuk produk Fashion.</p>
           </div>
           <div>
             <h4 className="font-bold mb-2 text-lg">Navigasi</h4>
@@ -153,12 +153,12 @@ export default function Home() {
           </div>
           <div>
             <h4 className="font-bold mb-2 text-lg">Kontak</h4>
-            <p>Email: info@HayataStore.id</p>
+            <p>Email: info@MDGfashionStore.id</p>
             <p>Phone: +62 812-3456-7890</p>
           </div>
         </div>
         <div className="mt-8 pt-6 border-t border-white/20 text-center text-xs text-white/70 max-w-7xl mx-auto">
-          © 2025 HayataStore. Semua hak dilindungi undang-undang.
+          © 2025 MDG Fashion. Semua hak dilindungi undang-undang.
         </div>
       </footer>
     </div>
