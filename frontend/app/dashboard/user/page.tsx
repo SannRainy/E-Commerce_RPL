@@ -9,7 +9,8 @@ type User = {
   _id: string;
   name: string;
   email: string;
-  role: 'customer' | 'seller' | 'admin';
+  // Sesuaikan dengan skema baru
+  role: 'customer' | 'admin';
 };
 
 export default function UserPage() {
@@ -87,13 +88,12 @@ export default function UserPage() {
                     </td>
                     <td className="p-4 whitespace-nowrap">
                       <select
-                        value={user.role}
-                        onChange={(e) => updateUserRole(user._id, e.target.value as User['role'])}
-                        className="block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition"
+                          value={user.role}
+                          onChange={(e) => updateUserRole(user._id, e.target.value as User['role'])}
+                          className="block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition"
                       >
-                        <option value="customer">Customer</option>
-                        <option value="seller">Seller</option>
-                        <option value="admin">Admin</option>
+                          <option value="customer">Customer</option>
+                          <option value="admin">Admin</option>
                       </select>
                     </td>
                     <td className="p-4 whitespace-nowrap">

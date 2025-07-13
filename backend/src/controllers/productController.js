@@ -1,17 +1,33 @@
 const Product = require('../models/Product');
 
-// GET all products
-exports.getAllProducts = async (req, res) => {
+// GET all products dengan paginasi
+exports.getAllProducts = async (req, res, next) => {
   try {
-    const products = await Product.find().populate('category');
-    res.status(200).json(products);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12; // Tampilkan 12 produk per halaman
+    const skip = (page - 1) * limit;
+
+    const products = await Product.find()
+      .populate('category')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    const totalProducts = await Product.countDocuments();
+    
+    res.status(200).json({
+      data: products,
+      currentPage: page,
+      totalPages: Math.ceil(totalProducts / limit),
+      totalItems: totalProducts,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil produk', error });
+    next(error);
   }
 };
 
 // GET single product
-exports.getProductById = async (req, res) => {
+exports.getProductById = async (req, res, next) => {
   const { productId } = req.params;
 
   try {
@@ -20,35 +36,33 @@ exports.getProductById = async (req, res) => {
 
     res.status(200).json(product);
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil produk', error });
+    next(error);
   }
 };
 
 // POST create product
-exports.createProduct = async (req, res) => {
+exports.createProduct = async (req, res, next) => {
   const { name, description, price, stock, category } = req.body;
 
   try {
     const imageUrl = req.file ? `/images/${req.file.filename}` : null;
+    if (!imageUrl) {
+        return res.status(400).json({ message: 'Gambar produk wajib diunggah.' });
+    }
 
-    const newProduct = new Product({
-      name,
-      description,
-      price,
-      stock,
-      category,
-      imageUrl
-    });
+    const newProduct = new Product({ name, description, price, stock, category, imageUrl });
 
     await newProduct.save();
-    res.status(201).json(newProduct);
+    // Populate kategori setelah disimpan
+    const populatedProduct = await Product.findById(newProduct._id).populate('category');
+    res.status(201).json(populatedProduct);
   } catch (error) {
-    res.status(400).json({ message: 'Gagal menambahkan produk', error });
+    next(error);
   }
 };
 
 // PUT update product
-exports.updateProduct = async (req, res) => {
+exports.updateProduct = async (req, res, next) => {
   const { productId } = req.params;
   const updateData = req.body;
 
@@ -65,12 +79,12 @@ exports.updateProduct = async (req, res) => {
 
     res.status(200).json(updatedProduct);
   } catch (error) {
-    res.status(400).json({ message: 'Gagal mengubah produk', error });
+    next(error);
   }
 };
 
 // DELETE product
-exports.deleteProduct = async (req, res) => {
+exports.deleteProduct = async (req, res, next) => {
   const { productId } = req.params;
 
   try {
@@ -79,6 +93,6 @@ exports.deleteProduct = async (req, res) => {
 
     res.status(200).json({ message: 'Produk berhasil dihapus' });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal menghapus produk', error });
+    next(error);
   }
 };

@@ -1,88 +1,124 @@
-const Order = require('../models/order');
+const Order = require('../models/Order');
+const Product = require('../models/Product'); // Diperlukan untuk validasi
 
-/**
- * @desc    Membuat pesanan baru
- * @route   POST /api/orders
- * @access  Public
- */
-const createOrder = async (req, res) => {
-  try {
-    // Data yang dikirim dari frontend akan ada di req.body
-    const { productName, price, customerDetails } = req.body;
+// Middleware untuk validasi
+const { body, validationResult } = require('express-validator');
 
-    if (!productName || !price || !customerDetails) {
-      return res.status(400).json({ message: 'Harap kirim semua data yang diperlukan' });
+
+exports.createOrder = [
+    // Tambahkan Auth Middleware di rute
+    // Validasi input
+    body('items').isArray({ min: 1 }).withMessage('Keranjang tidak boleh kosong'),
+    body('items.*.productId').isMongoId().withMessage('ID Produk tidak valid'),
+    body('items.*.quantity').isInt({ gt: 0 }).withMessage('Kuantitas harus lebih dari 0'),
+    body('customerDetails.name').notEmpty().withMessage('Nama tidak boleh kosong'),
+    body('customerDetails.address').notEmpty().withMessage('Alamat tidak boleh kosong'),
+    body('customerDetails.phone').notEmpty().withMessage('Telepon tidak boleh kosong'),
+
+    async (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        try {
+            const { items, customerDetails } = req.body;
+            const buyerId = req.user.id; // Didapat dari authMiddleware
+
+            let totalAmount = 0;
+            const productsForOrder = [];
+
+            for (const item of items) {
+                const product = await Product.findById(item.productId);
+                if (!product) {
+                    return res.status(404).json({ message: `Produk dengan ID ${item.productId} tidak ditemukan` });
+                }
+                if (product.stock < item.quantity) {
+                    return res.status(400).json({ message: `Stok untuk ${product.name} tidak mencukupi` });
+                }
+
+                totalAmount += product.price * item.quantity;
+                productsForOrder.push({
+                    product: product._id,
+                    quantity: item.quantity,
+                    price: product.price // Simpan harga saat itu
+                });
+
+                // Kurangi stok
+                product.stock -= item.quantity;
+                await product.save();
+            }
+
+            const newOrder = new Order({
+                buyer: buyerId,
+                products: productsForOrder,
+                totalAmount,
+                customerDetails
+            });
+
+            const createdOrder = await newOrder.save();
+            res.status(201).json(createdOrder);
+
+        } catch (error) {
+            next(error);
+        }
     }
+];
 
-    const newOrder = new Order({
-      productName,
-      price,
-      customerDetails,
-      // Status akan otomatis diisi 'Diproses' sesuai default di model
+
+exports.getAllOrders = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const orders = await Order.find({})
+      .populate('buyer', 'name email')
+      .populate('products.product', 'name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalOrders = await Order.countDocuments();
+      
+    res.status(200).json({
+      data: orders,
+      currentPage: page,
+      totalPages: Math.ceil(totalOrders / limit),
+      totalItems: totalOrders,
     });
-
-    const createdOrder = await newOrder.save();
-
-    // 201 artinya 'Created'
-    res.status(201).json(createdOrder);
-
   } catch (error) {
-    console.error(`Error saat membuat pesanan: ${error.message}`);
-    res.status(500).json({ message: 'Terjadi kesalahan pada server' });
+    next(error);
   }
 };
 
-/**
- * @desc    Mengambil semua data pesanan
- * @route   GET /api/orders
- * @access  Public (atau Private/Admin di aplikasi nyata)
- */
-const getAllOrders = async (req, res) => {
-  try {
-    // Mengambil semua pesanan dan mengurutkannya berdasarkan yang terbaru
-    const orders = await Order.find({}).sort({ createdAt: -1 });
 
-    res.status(200).json(orders);
+exports.updateOrderStatus = async (req, res, next) => {
+    try {
+        const { status } = req.body;
+        const allowedStatuses = ['Diproses', 'Dikirim', 'Selesai', 'Dibatalkan'];
+        if (!status || !allowedStatuses.includes(status)) {
+            return res.status(400).json({ message: 'Status tidak valid' });
+        }
 
-  } catch (error) {
-    console.error(`Error saat mengambil pesanan: ${error.message}`);
-    res.status(500).json({ message: 'Terjadi kesalahan pada server' });
-  }
-};
+        const order = await Order.findById(req.params.id);
 
-/**
- * @desc    Memperbarui status pesanan
- * @route   PUT /api/orders/:id/status
- * @access  Private/Admin
- */
-const updateOrderStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
+        if (!order) {
+            return res.status(404).json({ message: 'Pesanan tidak ditemukan' });
+        }
+        
+        // Logika untuk mengembalikan stok jika pesanan dibatalkan
+        if (status === 'Dibatalkan' && order.status !== 'Dibatalkan') {
+            for (const item of order.products) {
+                await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+            }
+        }
 
-    // Validasi status yang masuk
-    const allowedStatuses = ['Diproses', 'Dikirim', 'Selesai', 'Dibatalkan'];
-    if (!status || !allowedStatuses.includes(status)) {
-      return res.status(400).json({ message: 'Status tidak valid' });
+        order.status = status;
+        const updatedOrder = await order.save();
+        res.status(200).json(updatedOrder);
+
+    } catch (error) {
+        next(error);
     }
-
-    const order = await Order.findById(req.params.id);
-
-    if (order) {
-      order.status = status;
-      const updatedOrder = await order.save();
-      res.status(200).json(updatedOrder);
-    } else {
-      res.status(404).json({ message: 'Pesanan tidak ditemukan' });
-    }
-  } catch (error) {
-    console.error(`Error saat memperbarui status: ${error.message}`);
-    res.status(500).json({ message: 'Terjadi kesalahan pada server' });
-  }
-};
-
-
-module.exports = {
-  createOrder,
-  getAllOrders,
-  updateOrderStatus,
 };

@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { createOrder, getAllOrders, updateOrderStatus } = require('../controllers/orderController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-// Rute untuk endpoint /api/orders
-
-router.post('/', createOrder);
-router.get('/', getAllOrders);
-router.put('/:id/status', updateOrderStatus);
-
+// Amankan rute dengan middleware
+router.post('/', authMiddleware, createOrder);
+router.get('/', authMiddleware, getAllOrders);
+router.put('/:id/status', authMiddleware, updateOrderStatus);
 module.exports = router;

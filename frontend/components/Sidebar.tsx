@@ -1,8 +1,9 @@
-// components/Sidebar.tsx
-"use client";
+'use client';
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useContext } from "react";
+import { AuthContext } from "@/context/AuthContext";
 
 const navItems = [
   { href: "/dashboard/products", label: "Produk" },
@@ -13,6 +14,7 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useContext(AuthContext);
 
   return (
     <aside className="w-64 bg-white shadow-md p-6 hidden md:block">
@@ -22,8 +24,10 @@ export default function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
-            className={`block px-4 py-2 rounded-lg ${
-              pathname === item.href ? " font-semibold" : ""
+            className={`block px-4 py-2 rounded-lg transition-colors ${
+              (pathname ?? '').startsWith(item.href)
+                ? "bg-green-100 text-green-700 font-semibold"
+                : "hover:bg-gray-100"
             }`}
           >
             {item.label}
@@ -31,14 +35,13 @@ export default function Sidebar() {
         ))}
       </nav>
 
-       {/* Logout section */}
       <div className="mt-10 border-t pt-6">
-        <Link
-          href="/" // atau bisa diganti dengan onClick function
-          className="block text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 font-semibold"
+        <button
+          onClick={logout}
+          className="w-full text-left text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 font-semibold"
         >
           Logout
-        </Link>
+        </button>
       </div>
     </aside>
   );
