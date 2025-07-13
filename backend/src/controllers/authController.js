@@ -1,38 +1,22 @@
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import User from '../models/User.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-exports.register = async (req, res) => {
+export const login = async (req, res) => {
+    const { email, password } = req.body;
     try {
-        const { name, email, password } = req.body;
-    
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ message: 'Email sudah terdaftar' });
-    
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ name, email, password: hashedPassword });
-    
-        await newUser.save();
-        res.status(201).json({ message: 'Registrasi berhasil' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ message: "User doesn't exist." });
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        if (!isPasswordCorrect) return res.status(400).json({ message: "Invalid credentials." });
+
+        await User.findByIdAndUpdate(user._id, { isOnline: true });
+
+        const token = jwt.sign({ email: user.email, id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+        res.status(200).json({ result: { id: user._id, role: user.role }, token });
+    } catch (error) {
+        res.status(500).json({ message: "Something went wrong." });
     }
 };
-  
-exports.login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ message: "User tidak ditemukan"});
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(401).json({ message: 'Password salah' });
-
-        const token = jwt.sign({ id: user._id, email: user.email, name: user.name }, process.env.JWT_SECRET, {
-            expiresIn: '7h'
-        })
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
-    } catch (err) {
-        res.status(500).json({error: err.message})
-    }
-}
