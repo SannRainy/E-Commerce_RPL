@@ -55,7 +55,7 @@ export default function Home() {
       <section className="relative w-full h-[60vh] bg-[url('/bg-1.jpg')] bg-cover bg-center flex items-center justify-center text-center px-5">
         <div className="relative z-10 text-white">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">Belanja Produk Elektronik Berkualitas</h2>
-          {/* Mengarahkan ke bagian produk */}
+
           <a href="#produk" className="px-6 py-3 mt-10 bg-green-600 text-white rounded hover:bg-green-700 transition">
             Mulai Belanja
           </a>
