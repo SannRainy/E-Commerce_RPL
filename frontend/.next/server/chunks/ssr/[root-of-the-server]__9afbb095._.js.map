@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 119, "column": 0}, "map": {"version":3,"sources":["file://C%3A/Users/Murataa/Documents/Documents/Dev/Joki/e-commerce%20elektronik/frontend/components/Navbar.tsx"],"sourcesContent":["import Link from 'next/link'\r\nimport React from 'react'\r\n\r\nconst Navbar = () => {\r\n  return (\r\n    <div className='w-full relative top-0 bg-green-500 py-5 px-10 text-white'>\r\n      <div className='flex justify-between items-center'>\r\n        <h1 className='text-3xl font-bold'>Hayata Store</h1>\r\n        <div className='flex gap-10'>\r\n            <Link href=\"/login\">Login</Link>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  )\r\n}\r\n\r\nexport default Navbar"],"names":[],"mappings":";;;;AAAA;;;AAGA,MAAM,SAAS;IACb,qBACE,8OAAC;QAAI,WAAU;kBACb,cAAA,8OAAC;YAAI,WAAU;;8BACb,8OAAC;oBAAG,WAAU;8BAAqB;;;;;;8BACnC,8OAAC;oBAAI,WAAU;8BACX,cAAA,8OAAC,4JAAA,CAAA,UAAI;wBAAC,MAAK;kCAAS;;;;;;;;;;;;;;;;;;;;;;AAKhC;uCAEe","debugId":null}}]
+}
