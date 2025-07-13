@@ -1,12 +1,13 @@
 const express = require('express');
-const { login, register } = require('../controllers/authController')
+const authController = require('../controllers/authController');
 const router = express.Router();
-const authMiddleware = require('../middlewares/authMiddleware')
+const authMiddleware = require('../middlewares/authMiddleware');
 
-router.post('/register', register);
-router.post('/login', login);
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+
 router.get('/me', authMiddleware, (req, res) => {
-    res.status(200).json(req.user); // req.user diisi oleh authMiddleware
-  });
+    res.status(200).json(req.user);
+});
 
 module.exports = router;

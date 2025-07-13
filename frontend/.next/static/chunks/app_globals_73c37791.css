@@ -3649,6 +3649,12 @@
   }
 
   @media (hover: hover) {
+    .hover\:text-gray-200:hover {
+      color: var(--color-gray-200);
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:text-indigo-800:hover {
       color: var(--color-indigo-800);
     }
